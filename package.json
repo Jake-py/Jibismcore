@@ -1,0 +1,21 @@
+{
+  "name": "jibismcore",
+  "version": "1.0.0",
+  "type": "module",
+  "homepage": "https://Jake-py.github.io/Jibismcore",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d dist"
+  },
+  "dependencies": {
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "vite": "^5.4.20",
+    "@vitejs/plugin-react": "^4.2.0",
+    "gh-pages": "^5.0.0"
+  }
+}
