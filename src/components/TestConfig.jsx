@@ -1,13 +1,15 @@
 import React, { useState } from "react";
 
-const TestConfig = ({ onStart }) => {
+const TestConfig = ({ onStart, questionsCount = 0 }) => {
   const [timeLimit, setTimeLimit] = useState(60); // минуты
-  const [questionCount, setQuestionCount] = useState(10);
+  const [questionCount, setQuestionCount] = useState(Math.min(10, questionsCount || 10));
   const [shuffle, setShuffle] = useState(true);
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    onStart({ timeLimit, questionCount, shuffle });
+    // валидация: не больше доступных вопросов и минимум 1
+    const count = Math.max(1, Math.min(questionCount || 0, questionsCount || Infinity));
+    onStart({ timeLimit, questionCount: count, shuffle });
   };
 
   return (
@@ -25,9 +27,11 @@ const TestConfig = ({ onStart }) => {
         </label>
 
         <label>
-          Количество вопросов:
+          Количество вопросов (макс. {questionsCount || "—"}):
           <input
             type="number"
+            min={1}
+            max={questionsCount || undefined}
             value={questionCount}
             onChange={(e) => setQuestionCount(Number(e.target.value))}
             className="w-full p-2 border rounded"

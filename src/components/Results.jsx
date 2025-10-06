@@ -13,9 +13,15 @@ const Results = ({ answers = {}, questions = [], onRestart }) => {
 
   let correctCount = 0;
   questions.forEach((q, idx) => {
-    const userAnswer = answers[idx]?.selected;
-    const correctAnswer = q.answers.find(ans => ans.correct)?.text;
-    if (userAnswer && userAnswer === correctAnswer) correctCount += 1;
+    const a = answers[idx];
+    if (a && typeof a.correct !== "undefined") {
+      if (a.correct) correctCount += 1;
+    } else {
+      // fallback: compare by text if `correct` flag missing
+      const userAnswer = a?.selected;
+      const correctAnswer = q.answers.find(ans => ans.correct)?.text;
+      if (userAnswer && userAnswer === correctAnswer) correctCount += 1;
+    }
   });
 
   return (
@@ -29,7 +35,8 @@ const Results = ({ answers = {}, questions = [], onRestart }) => {
         {questions.map((q, idx) => {
           const a = answers[idx];
           const correctAnswer = q.answers.find(ans => ans.correct)?.text;
-          const isCorrect = a?.selected === correctAnswer;
+          // prefer explicit flag, otherwise fallback to text comparison
+          const isCorrect = a ? (typeof a.correct !== "undefined" ? !!a.correct : a.selected === correctAnswer) : false;
 
           return (
             <div key={idx} className="p-3 border rounded">

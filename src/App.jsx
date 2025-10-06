@@ -1,16 +1,16 @@
-import React, { useState, useMemo } from "react";
+import React, { useState } from "react";
 import FileUpload from "./components/FileUpload";
 import TestConfig from "./components/TestConfig";
 import TestRunner from "./components/TestRunner";
 import Results from "./components/Results";
 import Menu from "./components/Menu";
 import { parseTestFile } from "./utils/parser";
-import shuffle from "./utils/shuffle";
+import shuffleArray from "./utils/shuffle";
 
 function App() {
   const [step, setStep] = useState("menu"); // menu | upload | config | run | results
   const [questions, setQuestions] = useState([]); // все вопросы (оригинал)
-  const [selectedQuestions, setSelectedQuestions] = useState([]); // финальный набор для рана
+  const [selectedQuestions, setSelectedQuestions] = useState([]); // финальный набор для теста
   const [config, setConfig] = useState(null);
   const [results, setResults] = useState(null);
 
@@ -21,7 +21,7 @@ function App() {
     setStep("config");
   };
 
-  // после настройки теста: cfg = { questionCount: number, timeLimit: number, ... }
+  // после настройки теста
   const handleConfig = (cfg) => {
     if (!questions || questions.length === 0) {
       alert("Вы не загрузили тест. Возврат в меню.");
@@ -29,13 +29,13 @@ function App() {
       return;
     }
 
-    // определяем количество вопросов (по дефолту — все)
+    // определяем количество вопросов
     const count = cfg?.questionCount && cfg.questionCount > 0
       ? Math.min(cfg.questionCount, questions.length)
       : questions.length;
 
-    // перемешиваем оригинал и берем срез
-    const shuffled = shuffle([...questions]); // shuffle не мутирует входящий массив
+    // перемешиваем, если нужно
+    const shuffled = cfg.shuffle ? shuffleArray([...questions]) : [...questions];
     const selected = shuffled.slice(0, count);
 
     setConfig(cfg);
@@ -44,12 +44,25 @@ function App() {
   };
 
   // после прохождения теста
-  const handleFinish = (answers) => {
-    setResults({ answers }); // answers — объект: { [index]: { selected, correct } }
+  const handleFinish = (answersArray) => {
+    // answersArray может быть либо массивом (старый формат), либо объектом { index: { selected, correct } }
+    let formattedAnswers = {};
+
+    if (Array.isArray(answersArray)) {
+      // старый формат: массив выбранных значений
+      answersArray.forEach((ans, idx) => {
+        formattedAnswers[idx] = { selected: ans };
+      });
+    } else if (answersArray && typeof answersArray === "object") {
+      // новый формат: уже объект с нужными полями
+      formattedAnswers = answersArray;
+    }
+
+    setResults({ answers: formattedAnswers });
     setStep("results");
   };
 
-  // сброс по нажатию "начать заново" на results
+  // сброс
   const handleRestart = () => {
     setStep("menu");
     setQuestions([]);
