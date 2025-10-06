@@ -1,14 +1,16 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import FileUpload from "./components/FileUpload";
 import TestConfig from "./components/TestConfig";
 import TestRunner from "./components/TestRunner";
 import Results from "./components/Results";
 import Menu from "./components/Menu";
 import { parseTestFile } from "./utils/parser";
+import shuffle from "./utils/shuffle";
 
 function App() {
   const [step, setStep] = useState("menu"); // menu | upload | config | run | results
-  const [questions, setQuestions] = useState([]);
+  const [questions, setQuestions] = useState([]); // все вопросы (оригинал)
+  const [selectedQuestions, setSelectedQuestions] = useState([]); // финальный набор для рана
   const [config, setConfig] = useState(null);
   const [results, setResults] = useState(null);
 
@@ -19,41 +21,61 @@ function App() {
     setStep("config");
   };
 
-  // после настройки теста
+  // после настройки теста: cfg = { questionCount: number, timeLimit: number, ... }
   const handleConfig = (cfg) => {
+    if (!questions || questions.length === 0) {
+      alert("Вы не загрузили тест. Возврат в меню.");
+      setStep("menu");
+      return;
+    }
+
+    // определяем количество вопросов (по дефолту — все)
+    const count = cfg?.questionCount && cfg.questionCount > 0
+      ? Math.min(cfg.questionCount, questions.length)
+      : questions.length;
+
+    // перемешиваем оригинал и берем срез
+    const shuffled = shuffle([...questions]); // shuffle не мутирует входящий массив
+    const selected = shuffled.slice(0, count);
+
     setConfig(cfg);
+    setSelectedQuestions(selected);
     setStep("run");
   };
 
   // после прохождения теста
   const handleFinish = (answers) => {
-    setResults(answers);
+    setResults({ answers }); // answers — объект: { [index]: { selected, correct } }
     setStep("results");
   };
 
+  // сброс по нажатию "начать заново" на results
+  const handleRestart = () => {
+    setStep("menu");
+    setQuestions([]);
+    setSelectedQuestions([]);
+    setConfig(null);
+    setResults(null);
+  };
+
   return (
-    <div className="min-h-screen bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-pink-50 to-white flex items-center justify-center p-4 relative">
       <div className="bg-white shadow-xl rounded-2xl w-full max-w-2xl p-6">
         {step === "menu" && <Menu onSelect={(s) => setStep(s)} />}
         {step === "upload" && <FileUpload onFileLoad={handleFileLoad} />}
-        {step === "config" && <TestConfig onStart={handleConfig} />}
+        {step === "config" && <TestConfig onStart={handleConfig} questionsCount={questions.length} />}
         {step === "run" && (
           <TestRunner
-            questions={questions}
+            questions={selectedQuestions}
             config={config}
             onFinish={handleFinish}
           />
         )}
         {step === "results" && (
           <Results
-            answers={results}
-            questions={questions}
-            onRestart={() => {
-              setStep("menu");
-              setQuestions([]);
-              setConfig(null);
-              setResults(null);
-            }}
+            answers={results?.answers || {}}
+            questions={selectedQuestions}
+            onRestart={handleRestart}
           />
         )}
       </div>

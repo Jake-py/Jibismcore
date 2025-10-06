@@ -1,25 +1,29 @@
 /home/red/projects/Jibismcore
 │
-├── public/                # статические файлы (иконки, favicon, index.html базовый)
-│   ├── index.html
-│   └── style.css          # базовые стили (если вне tailwind)
+├── public/
+│   ├── emd.gif
+│   
 │
-├── src/                   # исходники фронтенда
-│   ├── components/        # UI-компоненты
-│   │   ├── FileUpload.js      # загрузка txt файла
-│   │   ├── TestConfig.js      # настройки теста (время, порядок, количество)
-│   │   ├── TestRunner.js      # сама логика прохождения теста
-│   │   ├── Results.js         # вывод результатов
-│   │   └── Menu.js            # главное меню
+├── src/                   
+│   ├── components/        
+│   │   ├── FileUpload.jsx      
+│   │   ├── TestConfig.jsx      
+│   │   ├── TestRunner.jsx      
+│   │   ├── Results.jsx         
+│   │   └── Menu.jsx           
 │   │
-│   ├── utils/             # утилиты
-│   │   ├── parser.js          # парсер txt в структуру тестов
-│   │   └── shuffle.js         # функция перемешивания вопросов/ответов
+│   ├── utils/             
+│   │   ├── parser.js          
+│   │   └── shuffle.js         
 │   │
-│   ├── App.js             # главный React-компонент
-│   ├── index.js           # точка входа React
-│   └── styles.css         # глобальные стили (tailwind подключается тут)
-│
+│   ├── App.jsx             
+│   ├── index.jsx       
+│   └── index.css
+│   
+├── package-lock.json # сама появились при запуске сайта
 ├── package.json
-├── vite.config.js         # если используем Vite (для быстроты)
-└── README.md
+├── vite.config.js
+├── taiwind.config.js
+├── postcss.config.js
+├── index.html
+└──  README.md
