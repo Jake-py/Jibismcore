@@ -13,8 +13,9 @@ const Results = ({ answers = {}, questions = [], onRestart }) => {
 
   let correctCount = 0;
   questions.forEach((q, idx) => {
-    const a = answers[idx];
-    if (a && a.correct) correctCount += 1;
+    const userAnswer = answers[idx]?.selected;
+    const correctAnswer = q.answers.find(ans => ans.correct)?.text;
+    if (userAnswer && userAnswer === correctAnswer) correctCount += 1;
   });
 
   return (
@@ -27,14 +28,16 @@ const Results = ({ answers = {}, questions = [], onRestart }) => {
       <div className="space-y-3">
         {questions.map((q, idx) => {
           const a = answers[idx];
-          const isCorrect = a && a.correct;
+          const correctAnswer = q.answers.find(ans => ans.correct)?.text;
+          const isCorrect = a?.selected === correctAnswer;
+
           return (
             <div key={idx} className="p-3 border rounded">
               <div className="font-semibold">{idx + 1}. {q.question}</div>
               <div className="mt-1">
                 <div>Ваш ответ: <span className={isCorrect ? "text-green-600" : "text-red-600"}>{a?.selected ?? "—"}</span></div>
                 {!isCorrect && (
-                  <div className="text-sm text-gray-600">Правильный ответ: {q.answers.find(ans => ans.correct)?.text ?? "—"}</div>
+                  <div className="text-sm text-gray-600">Правильный ответ: {correctAnswer ?? "—"}</div>
                 )}
               </div>
             </div>
