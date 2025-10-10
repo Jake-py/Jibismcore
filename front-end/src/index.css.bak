@@ -1,0 +1,31 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+body { /* existing styles */
+  min-height: 100vh;
+  font-size: 1.1rem;
+}
+
+#ollama-chat { /* backup copy */
+  position: fixed;
+  right: 20px;
+  bottom: 20px;
+}
+#ollama-icon {
+  width: 50px;
+  cursor: pointer;
+}
+#chat-box {
+  width: 300px;
+  height: 400px;
+  background: #181818;
+  color: white;
+  border-radius: 10px;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+.hidden {
+  display: none;
+}

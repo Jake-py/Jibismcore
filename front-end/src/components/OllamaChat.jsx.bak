@@ -1,0 +1,109 @@
+import React, { useState, useRef, useEffect } from "react";
+
+export default function OllamaChat({ askUrl, onClose }) {
+  const [collapsed, setCollapsed] = useState(false);
+  const [input, setInput] = useState("");
+  const [messages, setMessages] = useState([]); // {role:'user'|'assistant', text}
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const messagesRef = useRef(null);
+
+  useEffect(() => {
+    if (messagesRef.current) {
+      messagesRef.current.scrollTop = messagesRef.current.scrollHeight;
+    }
+  }, [messages]);
+
+  // Resolve askUrl: prefer prop, otherwise use VITE_ASK_URL if provided,
+  // otherwise fall back to the fixed '/api/chat' path. This avoids
+  // accidentally using a build-time BASE_URL like '/Jibismcore/'.
+  const resolvedAskUrl = (() => {
+    if (askUrl) return askUrl;
+    const viteAsk = (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_ASK_URL) ? import.meta.env.VITE_ASK_URL : null;
+    return viteAsk || "/api/chat";
+  })();
+
+  const send = async () => {
+    const trimmed = input.trim();
+    if (!trimmed) return;
+    setMessages((m) => [...m, { role: "user", text: trimmed }]);
+    setInput("");
+    setLoading(true);
+    setError(null);
+
+    try {
+  const res = await fetch(resolvedAskUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ prompt: trimmed }),
+      });
+
+      let text;
+      if (!res.ok) {
+        text = `Server error: ${await res.text()}`;
+      } else {
+        text = await res.text();
+      }
+
+      setMessages((m) => [...m, { role: "assistant", text }]);
+    } catch (e) {
+      setError(e.message || String(e));
+      setMessages((m) => [...m, { role: "assistant", text: `Request failed: ${e.message}` }]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <>
+      {/* collapse tab */}
+      {collapsed ? (
+        <div className="fixed right-6 bottom-40 z-50">
+          <button
+            onClick={() => setCollapsed(false)}
+            className="bg-blue-600 text-white px-3 py-2 rounded-l-md shadow"
+            title="\u0420\u0430\u0437\u0432\u0435\u0440\u043d\u0443\u0442\u044c Ollama"
+          >
+            Ollama \u25b6
+          </button>
+        </div>
+      ) : null}
+
+      <div
+        className={`fixed right-6 bottom-20 bg-white shadow-lg rounded-lg overflow-hidden z-50 flex flex-col ${collapsed ? 'hidden' : ''}`}
+        style={{ width: 320, height: '70vh' }}
+      >
+      <div className="p-2 bg-gray-100 flex items-center justify-between" style={{ borderBottom: '1px solid #e5e7eb' }}>
+        <div className="flex items-center gap-2">
+          <img src="/Ollama_icon.png" alt="O" style={{ width: 20, height: 20 }} />
+          <strong>Ollama</strong>
+        </div>
+        <div className="flex items-center gap-2">
+          <button onClick={() => setCollapsed(true)} className="px-2">_</button>
+          {onClose ? <button onClick={onClose} className="px-2">\u2715</button> : null}
+        </div>
+      </div>
+      <div ref={messagesRef} className="flex-1 p-2 overflow-auto text-sm" style={{ minHeight: 100 }}>
+        {messages.map((m, i) => (
+          <div key={i} className={m.role === "user" ? "text-right text-blue-600" : "text-left text-gray-800"}>
+            <div>{m.role === "user" ? "\u0422\u044b:" : "Ollama:"} {m.text}</div>
+          </div>
+        ))}
+        {error && <div className="text-red-500">{error}</div>}
+      </div>
+      <div className="p-2 border-t bg-white flex gap-2">
+        <input
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          onKeyDown={(e) => { if (e.key === "Enter") send(); }}
+          placeholder="\u0421\u043f\u0440\u043e\u0441\u0438 Ollama..."
+          className="flex-1 px-2 py-1 border rounded"
+        />
+        <button onClick={send} disabled={loading} className="px-3 bg-blue-500 text-white rounded">
+          {loading ? "..." : "\u27a4"}
+        </button>
+      </div>
+    </div>
+    </>
+  );
+}
