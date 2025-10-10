@@ -1,4 +1,6 @@
 import React, { useState } from "react";
+import { useEffect } from "react";
+import OllamaChat from "./components/OllamaChat";
 import FileUpload from "./components/FileUpload";
 import TestConfig from "./components/TestConfig";
 import TestRunner from "./components/TestRunner";
@@ -13,6 +15,9 @@ function App() {
   const [selectedQuestions, setSelectedQuestions] = useState([]); // финальный набор для теста
   const [config, setConfig] = useState(null);
   const [results, setResults] = useState(null);
+  // чат отображается как боковая панель
+  // URL для запроса к мосту Ollama. Можно переопределить через Vite: VITE_ASK_URL
+  const askUrl = (import.meta && import.meta.env && import.meta.env.VITE_ASK_URL) || "/api/chat";
 
   // после загрузки файла
   const handleFileLoad = (text) => {
@@ -58,8 +63,10 @@ function App() {
       formattedAnswers = answersArray;
     }
 
-    setResults({ answers: formattedAnswers });
-    setStep("results");
+  setResults({ answers: formattedAnswers });
+  setStep("results");
+  // чат теперь открывается вручную через кнопку в правом нижнем углу
+
   };
 
   // сброс
@@ -70,6 +77,8 @@ function App() {
     setConfig(null);
     setResults(null);
   };
+
+  // chat handled by <OllamaChat /> component
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-pink-50 to-white flex items-center justify-center p-4 relative">
@@ -91,7 +100,9 @@ function App() {
             onRestart={handleRestart}
           />
         )}
-      </div>
+  </div>
+  {/* render chat at root so fixed positioning is not clipped by inner container */}
+  <OllamaChat askUrl={askUrl} />
     </div>
   );
 }
