@@ -6,6 +6,11 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+// Root route to avoid 404 on /
+app.get('/', (req, res) => {
+  res.send('Backend is alive');
+});
+
 // Простая прокси к Ollama
 // Ожидает { prompt: string } и возвращает plain text ответ от Ollama
 app.post("/ask", async (req, res) => {

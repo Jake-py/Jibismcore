@@ -51,7 +51,7 @@ export default function OllamaChat({ askUrl, isOpen, onToggle }) {
             } catch (e) {
               // fallback to text
               bodyText = await res.text();
-            }
+            } 
           } else {
             bodyText = await res.text();
           }
@@ -94,15 +94,15 @@ export default function OllamaChat({ askUrl, isOpen, onToggle }) {
 
   return (
     <div
-      className={`fixed top-0 right-0 h-full ${isOpen ? 'w-80' : 'w-12'} bg-orange-600 border-2 border-black shadow-2xl z-50 flex flex-col transition-transform duration-300 ${
+      className={`fixed top-[40px] right-[50px] h-[80vh] ${isOpen ? 'w-50' : 'w-12'} bg-gray-600 border-2 border-black shadow-2xl z-50 flex flex-col transition-transform duration-300 ${
         isOpen ? 'translate-x-0' : 'translate-x-72'
       }`}
     >
       {/* Header */}
-      <div className="p-4 bg-orange-600 flex items-center justify-between border-b border-black">
+      <div className="p-4 bg-gray-600 flex items-center justify-between border-b border-black">
         {isOpen && <div className="flex items-center gap-3">
           <img src="/Ollama_icon.png" alt="O" className="w-6 h-6" />
-          <strong className="text-black">Ollama Chat</strong>
+          <strong className="text-orange-500">Ollama Chat</strong>
         </div>}
         <div className="flex gap-2">
           <button
@@ -111,7 +111,7 @@ export default function OllamaChat({ askUrl, isOpen, onToggle }) {
             className="text-black hover:text-gray-600 px-2 py-1 rounded disabled:opacity-50"
             title="Открыть чат"
           >
-            💬
+            ☢️
           </button>
           <button
             onClick={onToggle}
@@ -119,7 +119,7 @@ export default function OllamaChat({ askUrl, isOpen, onToggle }) {
             className="text-black hover:text-gray-600 px-2 py-1 rounded disabled:opacity-50"
             title="Закрыть чат"
           >
-            ✕
+            ❌
           </button>
         </div>
       </div>
