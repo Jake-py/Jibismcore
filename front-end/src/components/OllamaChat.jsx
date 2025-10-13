@@ -34,7 +34,7 @@ export default function OllamaChat({ askUrl, isOpen, onToggle }) {
       const res = await fetch(resolvedAskUrl, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ prompt: trimmed }),
+        body: JSON.stringify({ message: trimmed }),
       });
 
       let text;
