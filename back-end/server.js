@@ -69,7 +69,7 @@ app.post("/ask", async (req, res) => {
   }
 });
 
-// Новый JSON-эндпоинт для использования конкретной модели llama3.1
+// Новый JSON-эндпоинт с резервированием между Ollama и OpenAI
 app.post("/api/chat", async (req, res) => {
   try {
     const { message } = req.body;
@@ -77,8 +77,10 @@ app.post("/api/chat", async (req, res) => {
       return res.status(400).json({ error: "Invalid message" });
     }
 
-    const body = { model: "llama3.1", messages: [{ role: "user", content: message }] };
-    try {
+    // Функция для вызова Ollama
+    const callOllama = async () => {
+      console.log("Используется Ollama API");
+      const body = { model: "llama3.1", messages: [{ role: "user", content: message }] };
       const resp = await fetch("https://api.ollama.com/v1/chat", {
         method: "POST",
         headers: {
@@ -89,42 +91,57 @@ app.post("/api/chat", async (req, res) => {
       });
       const cloneTxt = await resp.clone().text();
       if (!resp.ok) {
-        return res.status(502).json({ error: `Ollama error: ${cloneTxt}` });
+        throw new Error(`Ollama error: ${cloneTxt}`);
       }
+      const data = JSON.parse(cloneTxt);
+      return data.choices[0].message.content;
+    };
 
-      const contentType = resp.headers.get("content-type") || "";
-      let reply = cloneTxt;
-      if (contentType.includes("application/json")) {
-        try {
-          const data = JSON.parse(cloneTxt);
-          reply = (data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content) || JSON.stringify(data);
-        } catch (e) {
-          // fallback to resp.json
-          try {
-            const data = await resp.json();
-            reply = (data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content) || JSON.stringify(data);
-          } catch (e2) {
-            reply = cloneTxt;
-          }
-        }
+    // Функция для вызова OpenAI
+    const callOpenAI = async () => {
+      console.log("Переключено на OpenAI fallback");
+      const body = { model: "gpt-4o-mini", messages: [{ role: "user", content: message }] };
+      const resp = await fetch("https://api.openai.com/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`
+        },
+        body: JSON.stringify(body),
+      });
+      const cloneTxt = await resp.clone().text();
+      if (!resp.ok) {
+        throw new Error(`OpenAI error: ${cloneTxt}`);
       }
+      const data = JSON.parse(cloneTxt);
+      return data.choices[0].message.content;
+    };
 
-      // Content negotiation: return plain text by default so front-end that
-      // expects raw text (OllamaChat.jsx) continues to work. If the client
-      // explicitly requests JSON (Accept: application/json) return JSON.
-      const accept = (req.get("accept") || "").toLowerCase();
-      if (accept.includes("application/json")) {
-        return res.json({ reply });
+    let reply;
+    try {
+      reply = await callOllama();
+    } catch (ollamaErr) {
+      console.error("Ollama failed:", ollamaErr.message);
+      try {
+        reply = await callOpenAI();
+      } catch (openaiErr) {
+        console.error("OpenAI fallback failed:", openaiErr.message);
+        return res.status(500).json({ error: "Both Ollama and OpenAI failed" });
       }
-
-      return res.type("text").send(String(reply));
-    } catch (err) {
-      console.error("/api/chat error:", err);
-      return res.status(500).json({ error: "Ollama не отвечает" });
     }
+
+    // Content negotiation: return plain text by default so front-end that
+    // expects raw text (OllamaChat.jsx) continues to work. If the client
+    // explicitly requests JSON (Accept: application/json) return JSON.
+    const accept = (req.get("accept") || "").toLowerCase();
+    if (accept.includes("application/json")) {
+      return res.json({ reply });
+    }
+
+    return res.type("text").send(String(reply));
   } catch (err) {
     console.error("/api/chat error:", err);
-    return res.status(500).json({ error: "Ollama не отвечает" });
+    return res.status(500).json({ error: "Internal server error" });
   }
 });
 
